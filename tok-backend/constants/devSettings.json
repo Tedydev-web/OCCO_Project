@@ -1,0 +1,19 @@
+{
+  "agoraKey": "1157aaab348246c98c316680d6e8ebac",
+  "agoraCertificate": "20cd864973c248a5b81a23d7da51cd88",
+  "privacyPolicyLink": "https://www.privacypolicygenerator.info/live.php?token=AuLSXTICG8cp8rsseiWQWy9GCbNpZuxR",
+  "privacyPolicyText": "PRIVACY POLICY TEXT",
+  "termAndCondition": "https://www.privacypolicygenerator.info/live.php?token=AuLSXTICG8cp8rsseiWQWy9GCbNpZuxR",
+  "isAppActive": true,
+  "contactSupport": "https://www.google.com/",
+  "howToWithdraw": "https://www.google.com/",
+  "time_queue" : 60,
+  "cache_time_out" : 300,
+  "random_filter": true,
+  "count_spam_check": 10,
+  "time_spam_check": 10,
+  "time_remove_private": "24",
+  "telegramChatID" : "-4238157986",
+  "tokenBotTelegram": "6368790355:AAEFb5392vdhdjkXTKMgJg8pL_xn4ESG9nU",
+  "ggAPIKey": "AIzaSyDkoo_OmFXrBo3ePF50tWO46DHNd5_VMV4"
+}

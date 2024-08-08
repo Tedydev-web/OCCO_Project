@@ -1,0 +1,17 @@
+{
+  "1":{
+    "image": "constants/default_images/emoji1.png"
+  },
+  "2":{
+    "image": "constants/default_images/emoji2.png"
+  },
+  "3":{
+    "image": "constants/default_images/emoji3.png"
+  },
+  "4":{
+    "image": "constants/default_images/emoji4.png"
+  },
+  "5":{
+    "image": "constants/default_images/emoji5.png"
+  }
+}

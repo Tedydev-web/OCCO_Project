@@ -1,0 +1,144 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{%  block head %}
+
+{%  endblock %}
+{% block extrahead %}
+<!-- Bootstrap CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"
+      type="text/css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.3/css/sb-admin-2.min.css"
+      rel="stylesheet">
+<!-- Firebase scripts -->
+
+
+
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Content Row -->
+    <div class="row">
+
+        <!-- New Users Today Card Example -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Người tạo mới hôm nay
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ new_users_today }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Online Card Example -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Người dùng online
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ online_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inactive Users in Last 7 Days Card Example -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Người không hoạt động 7 ngày
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ inactive_users_7_days }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inactive Users in Last 30 Days Card Example -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Người không hoạt động 30 ngày
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ inactive_users_30_days }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="text-dark  shadow card p-2" style="color: #000; background-color: #fff; border: 2px solid unset;">
+        <h5 class="text-center text-dark font-weight-bold pt-3">Hoạt động hệ thống</h5>
+        <div class="card-body">
+            <div id="text-monitor" class="overflow-auto p-3 rounded" style="height: 500px; background-color: #f8f9fa;">
+            </div>
+        </div>
+    </div>
+
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.3/js/sb-admin-2.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"
+      type="text/css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.3/css/sb-admin-2.min.css"
+      rel="stylesheet">
+<style>
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .container-fluid {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block extrascript %}
+{% endblock %}

@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+ 
+
+
+}
+@layer utilities {
+ 
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
+ /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+}
+.border-gradient {
+  border-width: 2px;
+  border-style: solid;
+  border-image: linear-gradient(to right bottom, #6603AC, #EF01BC) 1;
+  /* border-image-source:repeating-linear-gradient(45deg, transparent, #4d9f0c 20px); */
+  /* border-radius: 9999px; */
+}
+.swiper-pagination .swiper-pagination-bullet {
+  top: 155;
+}
+.swiper-pagination-bullet-active {
+  height: 6px;
+  width: 20px;
+  opacity: var(--swiper-pagination-bullet-opacity, 1);
+  background: var(--swiper-pagination-color, var(--swiper-theme-color));
+}
+
+.swiper-pagination-bullet-active{
+  width: 20px;
+}
+.swiper-pagination-bullet {
+  border-radius: 15px;
+}
+}

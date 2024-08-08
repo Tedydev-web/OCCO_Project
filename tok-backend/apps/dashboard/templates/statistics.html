@@ -1,0 +1,331 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block head %}
+{% endblock %}
+{% block extrahead %}
+<!-- Bootstrap CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"
+      type="text/css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.3/css/sb-admin-2.min.css"
+      rel="stylesheet">
+<!-- Flatpickr CSS -->
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Date Range Picker -->
+        <div class="col-xl-12 col-md-12 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <form id="date-range-form" method="GET" action="{% url 'statistics' %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="start-date">Ngày bắt đầu: {{start_date}}</label>
+                                    <input type="text" class="form-control" id="start-date" name="start_date"
+                                           placeholder="Chọn ngày bắt đầu">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="end-date">Ngày kết thúc: <span>{{end_date}}</span></label>
+                                    <input type="text" class="form-control" id="end-date" name="end_date"
+                                           placeholder="Chọn ngày kết thúc">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Lọc</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <h2>Người dùng</h2>
+    </div>
+    <div class="row">
+        <!-- Users Online Card Example -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Người dùng online
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ online_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Users Today Card Example -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Người tạo mới
+                                {% if has_filter == False %}
+                                hôm nay
+
+                                {% endif %}
+
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{new_users_today}}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Người dùng bị cấm
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ band_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-slash"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng số người dùng
+
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="row">
+        <h2>Bài viết</h2>
+    </div>
+
+    <div class="row">
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tổng số bài viết được tạo
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_blog_posts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Hình ảnh mới
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ new_image }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Video mới
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ new_video }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-video"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Lượt báo cáo bài viết
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ blog_report }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-flag"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <h2>Giao dịch</h2>
+    </div>
+
+    <div class="row">
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Số giao dịch nạp tiền
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ transaction_deposit }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Số giao dịch mua quà
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ transaction_gift }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Số giao dịch mua UID
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ transaction_uid }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    $(document).ready(function () {
+        flatpickr("#start-date", {
+            dateFormat: "d/m/Y",
+            altInput: true,
+            altFormat: "d/m/Y",
+            allowInput: true
+        });
+
+        flatpickr("#end-date", {
+            dateFormat: "d/m/Y",
+            altInput: true,
+            altFormat: "d/m/Y",
+            allowInput: true
+        });
+
+        $('#date-range-form').on('submit', function (e) {
+            // Nếu bạn cần kiểm tra dữ liệu trước khi gửi
+            var startDate = $('#start-date').val();
+            var endDate = $('#end-date').val();
+            console.log('Ngày bắt đầu:', startDate);
+            console.log('Ngày kết thúc:', endDate);
+        });
+    });
+</script>
+<style>
+    .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .container-fluid {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block extrascript %}
+{% endblock %}

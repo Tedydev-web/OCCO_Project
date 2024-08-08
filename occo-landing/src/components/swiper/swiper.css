@@ -1,0 +1,80 @@
+.swiper-pagination-bullet {
+    border-radius: 15px;
+    width: 6px;
+    height: 6px;
+    background-color: #1D1E3C;
+    opacity: 1;
+   
+  }
+
+.swiper-pagination-bullet-active{
+    width: 20px;
+    background-color: #A11BC7;
+}
+.swiper-pagination{
+
+}  
+
+@media (max-width: 480px) {
+  .responsive-div {
+    margin-bottom: 40px; /* Thiết lập padding bottom cho thiết bị có độ rộng <= 768px */
+  }
+  .responsive-button-download {
+    height: 85%
+  }
+  .line-height-des {
+    line-height: 37px;
+  }
+  .mg-landing {
+    justify-content: space-around
+  }
+  .pd-bottom-about {
+    padding-bottom: 0px;
+  }
+  .img-landing {
+    margin-top: 16px;
+  }
+  .no-padding-right {
+    padding-right: 0px;
+  }
+  .height-nav {
+    height: 79px;
+}
+}
+
+@media (max-width: 768px) {
+  .responsive-div {
+    margin-bottom: 40px; /* Thiết lập padding bottom cho thiết bị có độ rộng <= 768px */
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .responsive-div {
+    margin-bottom: 40px; /* Thiết lập padding bottom cho thiết bị có độ rộng từ 769px đến 1024px */
+  }
+  .margin-top-text-partnet {
+    margin-top: 15px
+  }
+}
+
+@media (min-width: 1025px) {
+  .responsive-div {
+    margin-bottom: 40px;
+  }
+  .pd-bottom-about {
+    padding-bottom: 3rem;
+  }
+  .upgrade-img-view {
+    padding-top: 50px
+  }
+  .margin-top-text-partnet {
+    margin-top: 15px
+  }
+}
+
+/* @media not all and (min-width: 480) {
+  .height-nav {
+    height: 79px;
+}
+} */
+

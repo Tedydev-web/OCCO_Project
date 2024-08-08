@@ -1,0 +1,996 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-4" id="chat-room-list">
+        <input type="text" id="search-bar" placeholder="Tìm kiếm phòng..." class="form-control mb-3">
+          <ul class="list-group" id="chat-rooms">
+            {% for room in list_room_data %}
+              <li class="chat-room-item" data-room-id="{{ room.id }}"  data-user-avatar="{{ room.other.avatar }}" data-user-name="{{ room.other.full_name}}" data-user-uid="{{ room.other.uid }}" data-user-phone="{{ room.other.phone_number }}" view-user-info="{{ room.other.id }}">
+                <img class="profile-image" src="{{ room.image }}" alt="Profile Image" style="width: 50px; height: 50px;">
+                  {% if room.total_unseen == 0 %}
+                    <div class="unread-dot hidden" ></div>
+                  {% endif %}
+                    {% if room.total_unseen != 0 %}
+                    <div class="unread-dot" ></div>
+                  {% endif %}
+              
+                  <div class="chat-room-info">
+                    <h6 class="chat-room-name">{{ room.name }}</h6>
+                    <p class="last-message" style="font-style: italic;">{{ room.last_message.text }}</p>
+                      <p class="message-timestamp">{{ room.newest_at }}</p>
+                  </div>
+              </li>
+              <li style="border-bottom: 1px solid #eee;"></li>
+
+            {% endfor %}
+          </ul>
+    </div>
+
+    <div class="col-md-8" id="chat-window">
+      <div class="user-info">
+        <img id="user-avatar" src="" alt="User Avatar" class="user-avatar">
+        <div class="user-details">
+          <h5 id="user-name"></h5>
+          <p id="user-uid"></p>
+          <p id="user-phone"></p>
+          <a id="view-user-info" target="_blank" href="">Xem thông tin người này</a>
+            
+        </div>
+      </div>
+      <div class="chat-container">
+          <div class="chat-history">
+            <!-- Chat messages will be appended here -->
+          </div>
+
+          <div class="chat-input-area">
+            <input type="text" id="chat-message-input" placeholder="Nhập tin nhắn...">
+              <input type="file" id="image-upload-input" style="display: none;" accept="image/*">
+              <button id="upload-image-button">Chọn ảnh</button>
+            <button id="send-chat-button">Gửi</button>
+          </div>
+          <div id="imagePreviewModal" class="modal">
+        <span class="close" onclick="closeImagePreview()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.min.js"></script>
+
+<script>
+    // script room
+    const token = "{{ token }}";
+    const domain = "https://occo.tokvn.live"; 
+    {#const domain = "http://127.0.0.1:9000";#}
+    {#const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhhZDM4MDlmLWI0MjUtNDI1NC04MDJhLTE0ZTY5OGEzMjg2NCIsImV4cCI6MTcyNDI1MjE0NH0.qU5ky_ovZyg0MlndWpCRERzpWYbTAHyo9vokvzjk98o";#}
+    {#const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhhZDM4MDlmLWI0MjUtNDI1NC04MDJhLTE0ZTY5OGEzMjg2NCIsImV4cCI6MTcyNDMxMDA2MH0.gScvCqJqV0jRqyM5kVYQdqt_Wj7LJca8TkqHrJL-20c";#}
+    const userId = "{{ user_id }}";
+    const socketUrl = "{{ socket_url }}";
+    const chatMessageInput = document.getElementById('chat-message-input');
+    const sendChatButton = document.getElementById('send-chat-button');
+    const sendImageButton = document.getElementById('upload-image-button');
+    const chatHistory = document.querySelector('.chat-history');
+    const searchBar = document.getElementById('search-bar'); // Define searchBar
+    let chatRoomsList = document.getElementById('chat-rooms'); // Define chatRoomsList
+    let isFetching = false;  // Track whether we are currently fetching messages
+    let offset = 0;
+    let limit = 20;
+    let isFetchingRooms = false; // Track whether we are currently fetching rooms
+    let offsetRooms = 0; // Initial offset for room fetching
+    const limitRooms = 10; // Number of rooms to fetch per request
+    let currentRoomId = null;  // Track current room ID
+    let roomId = '';
+    const socket = new WebSocket(socketUrl);
+    // Function to format timestamp
+    function formatTimestamp(timestamp) {
+      const date = new Date(timestamp);
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      return date.toLocaleDateString('vi-VN', options);
+    }
+    socket.onopen = function(event) {
+      console.log('WebSocket connection established.');
+    };
+
+
+    socket.onmessage = function(event) {
+      const eventData = JSON.parse(event.data);
+      const eventRoomId = eventData.room_id;
+      const eventDataDetails = eventData.data;
+
+      if (eventData.event === 'NEW_MESSAGE') {
+        // Received a new message for the current room
+        console.log('Received new message:', eventDataDetails);
+        if (eventRoomId === roomId) {
+            const messageElement = createMessageElement(eventDataDetails);
+            chatHistory.appendChild(messageElement);
+
+
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+          }
+
+
+        // Update last message in room list
+        const roomListItem = document.querySelector(`.chat-room-item[data-room-id="${eventRoomId}"]`);
+        if (roomListItem) {
+            if(eventDataDetails.sender.id !== userId){
+            const unreadDot = roomListItem.querySelector('.unread-dot');
+              unreadDot.classList.remove('hidden'); // Show unread dot
+              console.log(unreadDot);
+
+         }
+          const lastMessageElement = roomListItem.querySelector('.last-message');
+          lastMessageElement.textContent = eventDataDetails.text; 
+          const timestampElement = roomListItem.querySelector('.message-timestamp');
+          timestampElement.textContent = formatTimestamp(eventDataDetails.created_at);
+          // Move the room to the top of the list
+          chatRoomsList.insertBefore(roomListItem, chatRoomsList.firstElementChild);
+        }
+      }
+
+      if (eventData.event === 'NEW_CONVERSATION'){
+              const roomListItem = createRoomElement(eventDataDetails.data);
+          chatRoomsList.insertBefore(roomListItem, chatRoomsList.firstElementChild);
+
+      }
+    };
+
+    socket.onerror = function(error) {
+      console.error('WebSocket error:', error);
+    };
+
+    socket.onclose = function(event) {
+      console.log('WebSocket connection closed.');
+    };
+    function updateUserInfo(roomElement) {
+        console.log(roomElement);
+      const userAvatar = roomElement.getAttribute('data-user-avatar');
+      const userName = roomElement.getAttribute('data-user-name');
+      const userUid = roomElement.getAttribute('data-user-uid');
+      const userPhone = roomElement.getAttribute('data-user-phone');
+      const userUrl = `https://occo.tokvn.live/admin/user/customuser/${roomElement.getAttribute('view-user-info')}/change/`
+      document.getElementById('user-avatar').src = userAvatar;
+      document.getElementById('user-name').textContent = userName;
+      document.getElementById('user-uid').textContent = `UID: ${userUid}`;
+      document.getElementById('user-phone').textContent = `Phone: ${userPhone}`;
+      document.getElementById('view-user-info').href = userUrl;
+    }
+
+    // Add scroll room list
+    // Function to fetch room list
+    function fetchMoreRooms(offset, limit) {
+      if (isFetchingRooms) return;
+      isFetchingRooms = true;
+      const fetchRoomListUrl = `${domain}/dashboard/cskh/list-room/?type=CONNECT&limit=${limit}&offset=${offset}`;
+      {#const fetchRoomListUrl = `http://127.0.0.1:9000/api/v1/conversation/list/room/?type=CONNECT&limit=${limit}&offset=${offset}`;#}
+        fetch(fetchRoomListUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        const rooms = data.data.results;
+        rooms.forEach(room => {
+          const roomElement = createRoomElement(room);
+            chatRoomsList.appendChild(roomElement);
+        });
+        // Update offset for the next fetch
+        isFetchingRooms = false;
+      })
+      .catch(error => {
+        console.error('Error fetching rooms:', error);
+        isFetchingRooms = false;
+      });
+    }
+    // Function to load the first room's chat history
+    function loadFirstRoom() {
+      const firstRoom = chatRoomsList.querySelector('.chat-room-item');
+
+      if (firstRoom) {
+          roomId = firstRoom.getAttribute('data-room-id');
+        if (roomId) {
+          currentRoomId = roomId;  // Update current room ID
+          fetchChatHistory(roomId, limit, offset, true);  // Fetch messages for the first room
+            updateUserInfo(firstRoom);
+            
+        }
+      }
+    }
+
+    // Call loadFirstRoom on page load
+    document.addEventListener('DOMContentLoaded', function() {
+         chatHistory.scrollTop = chatHistory.scrollHeight;
+        loadFirstRoom();
+    });
+
+// Function to create a room element from room data
+    function createRoomElement(room) {
+        console.log(room);
+        const roomElement = document.createElement('li');
+        roomElement.classList.add('chat-room-item');
+        roomElement.setAttribute('data-room-id', room.id);
+        roomElement.setAttribute('data-user-avatar', room.other.avatar);
+        roomElement.setAttribute('data-user-name', room.other.full_name);
+        roomElement.setAttribute('data-user-uid', room.other.uid);
+        roomElement.setAttribute('data-user-phone', room.other.phone_number);
+        roomElement.setAttribute('view-user-info', room.other.id);
+        console.log(room.other.avatar,room.other.phone_number, room.other.uid, room.other.id);
+        const profileImage = document.createElement('img');
+        profileImage.classList.add('profile-image');
+        profileImage.src = room.image;
+        profileImage.alt = 'Profile Image';
+        profileImage.style.width = '50px';
+        profileImage.style.height = '50px';
+
+        const chatRoomInfo = document.createElement('div');
+        chatRoomInfo.classList.add('chat-room-info');
+
+        const chatRoomName = document.createElement('h6');
+        chatRoomName.classList.add('chat-room-name');
+        chatRoomName.textContent = room.name;
+
+        const lastMessage = document.createElement('p');
+        lastMessage.classList.add('last-message');
+        lastMessage.style.fontStyle = 'italic';
+        lastMessage.textContent = room.last_message.text;
+        const messageTimestamp = document.createElement('p');
+        messageTimestamp.classList.add('message-timestamp');
+        messageTimestamp.textContent = room.newest_at;
+
+
+        const unreadDot = document.createElement('span');
+        unreadDot.classList.add('unread-dot');
+        if (room.total_unseen === 0) {
+        unreadDot.classList.add('hidden');
+        }
+        chatRoomInfo.appendChild(chatRoomName);
+        chatRoomInfo.appendChild(lastMessage);
+        chatRoomInfo.appendChild(messageTimestamp);
+        roomElement.appendChild(unreadDot);
+        roomElement.appendChild(profileImage);
+        roomElement.appendChild(chatRoomInfo);
+
+  return roomElement;
+}
+    // Event listener for scroll on chat room list
+    chatRoomsList.addEventListener('scroll', function() {
+      const scrollTop = chatRoomsList.scrollTop;
+      const scrollHeight = chatRoomsList.scrollHeight;
+      const clientHeight = chatRoomsList.clientHeight;
+
+      // Fetch more rooms if scrolled to the bottom (plus a small threshold)
+      if (scrollHeight - scrollTop <= clientHeight + 100) {
+
+        offsetRooms += 10;
+        fetchMoreRooms(offsetRooms,limitRooms);
+      }
+    });
+    function handleRoomClick(roomId, unreadDot) {
+          unreadDot.classList.add('hidden'); // Hide the unread dot
+        }
+
+    // Add click event listener to each chat room item
+    chatRoomsList.addEventListener('click', function(event) {
+      const item = event.target.closest('.chat-room-item');
+          updateUserInfo(item);
+             chatHistory.scrollTop = chatHistory.scrollHeight;
+
+      if (item) {
+        roomId = item.getAttribute('data-room-id');
+        const unreadDot = item.querySelector('.unread-dot');
+        handleRoomClick(roomId, unreadDot) ;
+
+        if (roomId !== currentRoomId) {
+          currentRoomId = roomId;  // Update current room ID
+          resetChatHistory();  // Reset chat history
+          fetchChatHistory(roomId, limit, offset, true);  // Fetch messages for new room
+
+        }
+      }
+    });
+
+    // Function to reset chat history
+    function resetChatHistory() {
+      chatHistory.innerHTML = '';  // Clear chat history content
+      offset = 0;  // Reset offset
+    }
+
+    // Function to fetch chat history
+    function fetchChatHistory(roomId, limit, offset, initialLoad = false) {
+      if (isFetching) return;
+      isFetching = true;
+
+      const fetchChatHistoryUrl = `${domain}/api/v1/conversation/detail/room/message/${roomId}/?limit=${limit}&offset=${offset}`;
+      {#const fetchChatHistoryUrl = `http://127.0.0.1:9000/api/v1/conversation/detail/room/message/${roomId}/?limit=${limit}&offset=${offset}`;#}
+        fetch(fetchChatHistoryUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log(roomId, limit, offset);
+        const messages = data.data.results;
+        console.log(messages);
+        const currentScrollPosition = chatHistory.scrollTop;  // Save current scroll position
+        const previousScrollHeight = chatHistory.scrollHeight;  // Save current scroll height
+
+        messages.forEach(message => {
+          const messageElement = createMessageElement(message);
+          chatHistory.insertBefore(messageElement, chatHistory.firstChild);  // Insert messages at the top
+        });
+
+        if (initialLoad) {
+          chatHistory.scrollTop = chatHistory.scrollHeight;  // Scroll to bottom on initial load
+        } else {
+          chatHistory.scrollTop = chatHistory.scrollHeight - previousScrollHeight + currentScrollPosition;  // Adjust scroll position
+        }
+
+        isFetching = false;
+      })
+      .catch(error => {
+        console.error('Error fetching chat history:', error);
+        isFetching = false;
+      });
+    }
+
+    // Function to create a message element from message data
+    function createMessageElement(messageData) {
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('chat-message');
+
+      // Determine sender info based on message data
+      let senderInfo;
+    const messageContentElement = document.createElement('div');
+      messageContentElement.classList.add('message-content');
+    // Set message content based on message type
+        if (messageData.type === 'IMAGE') {
+            messageContentElement.classList.add('image-grid');
+           messageData.file.forEach(file => {
+            const imageElement = document.createElement('img');
+            imageElement.classList.add('message-image');
+            imageElement.src = file.file_url; // Assuming the image URL is provided in file.url
+            imageElement.alt = 'Image message';
+            imageElement.addEventListener('click', () => {
+                openImagePreview(file.file_url);
+            });
+            messageContentElement.appendChild(imageElement);
+        });
+        } else {
+            const messageTextElement = document.createElement('div');
+            messageTextElement.classList.add('message-text');
+            messageTextElement.textContent = messageData.text;
+            messageContentElement.appendChild(messageTextElement);
+        }
+
+
+    // Determine sender info based on message data
+      if (messageData.sender.id !== userId) {
+        messageElement.classList.add('other');
+        const avatarElement = document.createElement('img');
+        avatarElement.classList.add('message-avatar');
+        avatarElement.src = messageData.sender.avatar;
+        avatarElement.alt = 'Avatar';
+        avatarElement.style.width = '30px';
+        avatarElement.style.height = '30px';
+        messageElement.appendChild(avatarElement);
+        messageElement.appendChild(messageContentElement);
+      } else {
+        messageElement.classList.add('self');
+        messageElement.appendChild(messageContentElement);
+      }
+           // Create a span element for the timestamp
+        const timestampElement = document.createElement('span');
+        timestampElement.classList.add('message-timestamp');
+        timestampElement.textContent = formatTimestamp(messageData.created_at);
+        messageElement.appendChild(timestampElement);
+      return messageElement;
+    }
+        // Function to open image preview modal
+    function openImagePreview(imageUrl) {
+        const modal = document.getElementById('imagePreviewModal');
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageUrl;
+        modal.style.display = 'block';
+    }
+        // Function to close image preview modal
+    function closeImagePreview() {
+        const modal = document.getElementById('imagePreviewModal');
+        modal.style.display = 'none';
+    }
+
+    // Event listener to close modal when clicking outside the image
+    window.addEventListener('click', (event) => {
+        const modal = document.getElementById('imagePreviewModal');
+        if (event.target === modal) {
+            closeImagePreview();
+        }
+    });
+    chatHistory.addEventListener('scroll', handleScroll);
+
+    function handleScroll() {
+      if (chatHistory.scrollTop <= 5 && !isFetching) {
+        offset += 5;
+        console.log(limit,offset);
+        fetchChatHistory(currentRoomId, limit, offset);
+      }
+    }
+    document.getElementById('chat-message-input').addEventListener('paste', function(event) {
+        const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        for (let index in items) {
+            const item = items[index];
+            if (item.kind === 'file') {
+                const blob = item.getAsFile();
+                uploadImage(blob).then(response => {
+                    const fileId = response.data.id; // Assuming the response contains the file ID
+                    sendImageMessage('IMAGE', 'Image', [fileId]);
+                }).catch(error => {
+                    console.error('Error uploading image:', error);
+                });
+            }
+        }
+    });
+    // Function to handle sending image message
+    sendImageButton.addEventListener('click', function() {
+        document.getElementById('image-upload-input').click();
+    });
+
+    document.getElementById('image-upload-input').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            uploadImage(file).then(response => {
+                const fileId = response.data.id; // Assuming the response contains the file ID
+                sendImageMessage('IMAGE', 'admin', [fileId]);
+            }).catch(error => {
+                console.error('Error uploading image:', error);
+            });
+        }
+    });
+
+    function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        return fetch(`${domain}/api/v1/general/upload/`, {  // Replace with your API endpoint
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Replace with your auth token
+            },
+            body: formData
+        }).then(response => response.json());
+    }
+    sendChatButton.addEventListener('click', () => {
+      const message = chatMessageInput.value.trim();
+      if (message) {
+          const sendMessageUrl = `${domain}/api/v1/conversation/chat/room/${roomId}/`;
+          fetch(sendMessageUrl, {
+              method: 'POST',
+              headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                  type: 'TEXT',
+                  text: message
+              })
+          })
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                  }
+                  return response.json();
+              })
+          {#  .then(data => {#}
+          {#    const messageElement = createMessageElement(data.data); // Create message element from received data#}
+          {#    const roomItem = document.querySelector(`.chat-room-item[data-room-id="${data.data.room}"]`);#}
+          {#    if (roomItem) {#}
+          {#        const unreadDot = roomItem.querySelector('.unread-dot');#}
+          {#        handleRoomClick(data.data.room, unreadDot);#}
+          {#    }#}
+          {#    chatHistory.appendChild(messageElement); // Append new message to chat history#}
+          {#    console.log('Message sent successfully:', data);#}
+          {#    // Optionally, update UI logic such as clearing input and scrolling to bottom#}
+          {#    chatMessageInput.value = '';#}
+          {#    chatHistory.scrollTop = chatHistory.scrollHeight;#}
+          {#  })#}
+          {#  .catch(error => {#}
+          {#    console.error('Error sending message:', error);#}
+          {#    // Handle error scenario, e.g., show an error message to the user#}
+          {#  });#}
+      }
+    });
+    chatMessageInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();  // Prevent default behavior (e.g., form submission)
+            
+            const message = chatMessageInput.value.trim();
+            if (message) {
+                const sendMessageUrl = `${domain}/api/v1/conversation/chat/room/${roomId}/`;
+                fetch(sendMessageUrl, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'TEXT',
+                        text: message
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Handle successful response (if needed)
+                    console.log('Message sent successfully:', data);
+                    // Optionally clear input field after sending
+                    chatMessageInput.value = '';
+                })
+                .catch(error => {
+                    // Handle error
+                    console.error('Error sending message:', error);
+                });
+            }
+        }
+    });
+    function sendImageMessage(type, text, files) {
+        const sendMessageUrl = `${domain}/api/v1/conversation/chat/room/${roomId}/`;
+        fetch(sendMessageUrl, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type: type,
+                text: text,
+                file: files
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const messageElement = createMessageElement(data.data); // Create message element from received data
+            const roomItem = document.querySelector(`.chat-room-item[data-room-id="${data.data.room}"]`);
+            if (roomItem) {
+                const unreadDot = roomItem.querySelector('.unread-dot');
+                handleRoomClick(data.data.room, unreadDot);
+            }
+            chatHistory.appendChild(messageElement); // Append new message to chat history
+            console.log('Message sent successfully:', data);
+            // Optionally, update UI logic such as clearing input and scrolling to bottom
+            chatMessageInput.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        })
+        .catch(error => {
+            console.error('Error sending message:', error);
+            // Handle error scenario, e.g., show an error message to the user
+        });
+    }
+
+
+    // Function to search rooms
+    function searchRooms(keyword) {
+      if (isFetchingRooms) return;  // Prevent multiple simultaneous requests
+      isFetchingRooms = true;
+      console.log(keyword.length, 'dangtim');
+      if (keyword.length === 0){
+          chatRoomsList.innerHTML = ''; 
+          isFetchingRooms = false;
+          fetchMoreRooms(0,10);
+      }
+      else {
+           // If the keyword is empty, fetch the initial list of rooms
+      const searchRoomsUrl = `${domain}/dashboard/cskh/search-room/?keyword=` + keyword;
+      {#const searchRoomsUrl = 'http://127.0.0.1:9000/dashboard/cskh/search-room/?keyword=' + keyword;#}
+        fetch(searchRoomsUrl)
+      .then(response => response.json())
+      .then(data => {
+        const rooms = data.data;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+        chatRoomsList.innerHTML = '';  // Clear current list
+
+        // Append searched rooms to the list
+        rooms.forEach(room => {
+            console.log(room);
+          const roomListItem = createRoomElement(room);
+          chatRoomsList.appendChild(roomListItem);
+        });
+
+        isFetchingRooms = false;
+      })
+      .catch(error => {
+        console.error('Error searching rooms:', error);
+        isFetchingRooms = false;
+      });
+    }
+      }
+
+    let searchTimeout = null;
+      searchBar.addEventListener('input', function() {
+      const keyword = searchBar.value.trim();
+      
+      // Clear the previous timeout if the user types within the delay period
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    
+      // Set a new timeout to call searchRooms after 2 seconds of inactivity
+      searchTimeout = setTimeout(function() {
+        searchRooms(keyword);
+      }, 800);  // 2000 milliseconds = 2 seconds
+    });
+</script>
+
+{% endblock %}
+
+
+{% block extrastyle %}
+    <style>
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 20px;
+      padding: 20px;
+      background-color: #ecf0f3;
+      box-shadow: 5px 5px 15px #bebebe, -5px -5px 15px #ffffff;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .search-bar {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 50px;
+      background-color: #ecf0f3;
+      box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff;
+      font-size: 16px;
+      outline: none;
+      margin-bottom: 20px;
+    }
+
+    .chat-rooms-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .chat-room-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background-color: #ecf0f3;
+        box-shadow: 5px 5px 15px #bebebe, -5px -5px 15px #ffffff;
+        transition: transform 0.2s;
+    }
+    .chat-room-item .unread-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: red;
+      display: inline-block;
+    }
+    .unread-dot {
+        width: 8px;
+        height: 8px;
+        background-color: red;
+        border-radius: 50%;
+        position: absolute;
+        top: 15px; /* Điều chỉnh vị trí dọc của chấm đỏ (tùy theo thiết kế) */
+        right: 5px; /* Điều chỉnh vị trí ngang của chấm đỏ (tùy theo thiết kế) */
+    }
+    .chat-room-item .unread-dot.hidden {
+      display: none;
+    }
+    .chat-room-item:hover {
+      transform: translateY(-5px);
+    }
+
+    #chat-rooms {
+      list-style: none;
+      padding: 0;
+      height: 500px;
+      overflow-y: scroll;
+    }
+
+    .profile-image {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .chat-room-info {
+        flex: 1;
+        {#justify-content: space-between; /* Căn các phần tử theo chiều ngang với khoảng cách đều nhau */#}
+        {#align-items: center; /* Căn các phần tử theo chiều dọc */#}
+    }
+
+    .chat-room-name {
+        margin: 0;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .last-message {
+        margin: 0;
+      color: #999;
+    }
+
+    .message-timestamp {
+        margin: 0;
+      font-size: medium;
+      color: #888;
+    }
+
+    .unread-message {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .online-indicator {
+      background-color: #4CAF50;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+
+    .offline-indicator {
+      background-color: #f44336;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #ccc;
+      height: 550px;
+      overflow: hidden;
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    .chat-history {
+      flex: 1;
+      overflow-y: scroll;
+      padding: 10px;
+    }
+
+    .chat-message {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      text-align: left;
+    }
+    .image-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+    width: 100%;
+    }
+    .message-image {
+    max-width: 50%;
+    max-height: 50%;
+    border-radius: 5px;
+    flex: 1 1 calc(50% - 10px); /* Assuming you want two images per row */
+    box-sizing: border-box;
+    margin: 5px;
+}
+    .chat-message.self {
+      background-color: #6f42c10a;
+      text-align: right;
+      align-items: flex-end;
+    }
+
+    .chat-message.other {
+      background-color: #6f42c126;
+      text-align: left;
+      align-items: flex-start;
+    }
+
+    .chat-message .message-timestamp {
+      font-size: 0.8em;
+      color: #888;
+      margin-bottom: 5px;
+    }
+
+    .chat-message .message-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .chat-message .message-text {
+      flex: 1;
+      font-size: 1em;
+    }
+
+    .chat-input-area {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+    }
+
+    #chat-message-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+    #upload-image-button {
+      margin-right: 10px;
+    }
+    #send-chat-button {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+    }
+
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-details h5 {
+      margin: 0;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .user-details p {
+      margin: 0;
+      color: #555;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        width: 95%;
+        padding: 15px;
+      }
+
+      .chat-container {
+        height: 450px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        width: 100%;
+        padding: 10px;
+      }
+
+      .chat-container {
+        height: 350px;
+      }
+
+      .chat-message .message-text {
+        font-size: 0.9em;
+      }
+
+      #chat-message-input {
+        padding: 8px;
+      }
+
+      #send-chat-button {
+        padding: 8px;
+      }
+    }
+
+    /* Modal styling */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
+        padding-top: 60px; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+    }
+
+    .modal-content {
+        margin: auto;
+        display: block;
+        max-width: 90%; /* Limit width to 90% of screen */
+        max-height: 90%; /* Limit height to 90% of screen */
+        width: auto; /* Maintain aspect ratio */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    .modal img {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+    }
+
+    /* Optional: Add animation for the modal */
+    .modal-content, .modal img {
+        animation-name: zoom;
+        animation-duration: 0.6s;
+    }
+
+    @keyframes zoom {
+        from {transform: scale(0)}
+        to {transform: scale(1)}
+    }
+
+    .close {
+        position: absolute;
+        top: 15px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #bbb;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    </style>
+{% endblock %}
+
+</div>

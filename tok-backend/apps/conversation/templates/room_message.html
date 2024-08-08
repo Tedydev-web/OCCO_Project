@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .message-metadata {
+            font-size: 0.75em;
+            margin-bottom: 5px;
+        }
+        .message-sender {
+            font-weight: bold;
+        }
+        .file-list {
+            margin-top: 10px;
+        }
+        .file-list a {
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <ul>
+        {% for message in messages %}
+            <li>
+                <div class="message-metadata">{{ message.created_at }}</div>
+                <div class="message-sender">{{ message.sender.full_name }}</div>
+                <div>{{ message.text }}</div>
+                {% if message.file.all %}
+                    <div class="file-list">
+                        <strong>File:</strong>
+                        {% for file in message.file.all %}
+                            <a href="{{ file.file.url }}" target="_blank">{{ file.file.url }}</a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>No messages found.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

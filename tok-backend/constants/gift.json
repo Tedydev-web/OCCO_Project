@@ -1,0 +1,30 @@
+{
+  "1":{
+    "title_vi": "Sao",
+    "title_en" : "Star",
+    "image": "constants/default_images/star.png",
+    "type": "STAR",
+    "price": 10
+  },
+  "2":{
+    "title_vi": "Kim cương",
+    "title_en" : "Diamond",
+    "image": "constants/default_images/diamond.png",
+    "type": "DIAMOND",
+    "price": 15
+  },
+  "3":{
+    "title_vi": "Hoa hồng",
+    "title_en" : "Rose",
+    "image": "constants/default_images/bow.png",
+    "type": "ROSE",
+    "price": 20
+  },
+  "4":{
+    "title_vi": "Donut",
+    "title_en" : "Donut",
+    "image": "constants/default_images/donut.png",
+    "type": "DONUT",
+    "price": 25
+  }
+}

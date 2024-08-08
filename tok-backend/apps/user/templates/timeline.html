@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Timeline</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .activity {
+            margin-bottom: 20px;
+        }
+        .activity-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .activity-item img {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        .activity-item div {
+            flex: 1;
+        }
+        .activity-time {
+            font-size: 12px;
+            color: #999;
+        }
+        .activity-text {
+            font-size: 16px;
+            color: #333;
+        }
+        .activity-text a {
+            color: #5e3fd5;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Tất cả</div>
+        <div class="activity">
+            {% for item in timeline %}
+            <div class="activity-item">
+                <img src="{{ item.user.get_avatar }}" alt="User Avatar">
+                <div>
+                    <div class="activity-text">
+                        {{ item.user.name }}<a rel="noopener noreferrer" target="_blank" href="{{ item.link }}">{{ item.title }} của {{ item.direct_user.full_name }}</a>
+                    </div>
+                    <div class="activity-time">{{ item.created_at|timesince  }} trước</div>
+                    <div class="activity-content">{{ item.body }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

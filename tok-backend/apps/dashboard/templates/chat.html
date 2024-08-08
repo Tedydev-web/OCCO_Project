@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.3/css/sb-admin-2.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="rooms">
+            <h3>Chat Rooms</h3>
+            <ul>
+                {% for room in chat_rooms %}
+                    <li><a href="{% url 'chat_room' room.name %}">{{ room.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="chat">
+            <div class="chat-box" id="chat-box">
+                {% for message in messages %}
+                    <div class="message {{ message.sender }}">
+                        <strong class="{{ message.sender }}">{{ message.sender }}:</strong> {{ message.text }}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="message-input">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="text" name="message" placeholder="Enter your message" required>
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        var chatBox = document.getElementById('chat-box');
+        chatBox.scrollTop = chatBox.scrollHeight;
+    </script>
+{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        .container-fluid {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .chart-area {
+            position: relative;
+            height: 400px;
+        }
+    </style>
+{% endblock %}
+
+{% block extrascript %}
+
+{% endblock %}

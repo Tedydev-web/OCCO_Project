@@ -1,0 +1,52 @@
+{
+  "work_information": [
+    {"title": "Giáo viên"},
+    {"title": "Kỹ sư"},
+    {"title": "Bác sĩ"},
+    {"title": "Luật sư"},
+    {"title": "Nghệ sĩ"},
+    {"title": "Nhà khoa học"},
+    {"title": "Chuyên viên công tác xã hội"},
+    {"title": "Nhân viên bán hàng"},
+    {"title": "Thợ thủ công"},
+    {"title": "Nông dân"}
+  ],
+  "character_information": [
+    {"title": "Hài hước"},
+    {"title": "Sáng tạo"},
+    {"title": "Tháo vát"},
+    {"title": "Trí tuệ"},
+    {"title": "Tin cậy"},
+    {"title": "Cẩn thận"},
+    {"title": "Kiên nhẫn"},
+    {"title": "Lạc quan"},
+    {"title": "Dũng cảm"},
+    {"title": "Nhún nhường"}
+  ],
+  "search_information": [
+    {"title": "Trò chuyện"},
+    {"title": "Bạn đời"},
+    {"title": "Hẹn hò"},
+    {"title": "Lãng mạn"},
+    {"title": "Bạn bè"}
+  ],
+  "hobby_information": [
+    {"title": "Đọc sách"},
+    {"title": "Viết lách"},
+    {"title": "Chơi nhạc"},
+    {"title": "Vẽ tranh"},
+    {"title": "Chơi thể thao"},
+    {"title": "Nấu ăn"},
+    {"title": "Du lịch"},
+    {"title": "Làm vườn"},
+    {"title": "Chăm sóc thú cưng"},
+    {"title": "Xem phim"}
+  ],
+  "communicate_information": [
+    {"title": "Trực tiếp"},
+    {"title": "Trực tuyến"},
+    {"title": "Qua điện thoại"},
+    {"title": "Qua tin nhắn"},
+    {"title": "Qua email"}
+  ]
+}
